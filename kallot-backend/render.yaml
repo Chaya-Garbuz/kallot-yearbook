@@ -1,0 +1,33 @@
+# הגדרת פריסה ל־Render. מסד הנתונים מוגדר בנפרד (למשל Supabase או Neon),
+# והכתובת שלו נכנסת ל־DATABASE_URL בהגדרות השירות.
+services:
+  - type: web
+    name: kallot-backend
+    runtime: node
+    plan: free
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npx prisma migrate deploy && npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: CORS_ORIGINS
+        sync: false
+      - key: PUBLIC_URL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: ENABLE_JOBS
+        value: "true"
+      - key: TIMEZONE
+        value: Asia/Jerusalem

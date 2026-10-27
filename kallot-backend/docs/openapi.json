@@ -1,0 +1,6007 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "שנתון הכלות API",
+    "version": "1.0.0",
+    "description": "שרת לשנתון של סמינר: כיתות, התמחויות, ישיבות, כלות, לוח שנה, תזכורות, אלבום איחולים ודיוור.\n\n**איך מתחברים מכאן:** פתחי את `POST /api/auth/login`, לחצי Try it out, שלחי מייל וסיסמה מנתוני הדוגמה, העתיקי את ה־token מהתשובה, לחצי על הכפתור Authorize למעלה והדביקי אותו.\n\nכל השגיאות חוזרות במבנה `{ \"error\": { \"code\", \"message\", \"details\" } }`."
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "השרת הנוכחי"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "כללי"
+    },
+    {
+      "name": "התחברות"
+    },
+    {
+      "name": "סטטיסטיקה"
+    },
+    {
+      "name": "כיתות"
+    },
+    {
+      "name": "כלות"
+    },
+    {
+      "name": "התמחויות"
+    },
+    {
+      "name": "ישיבות"
+    },
+    {
+      "name": "דיווחים"
+    },
+    {
+      "name": "תזכורות"
+    },
+    {
+      "name": "אלבום איחולים"
+    },
+    {
+      "name": "מידע ודיוור"
+    },
+    {
+      "name": "ניהול"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "example": "FORBIDDEN"
+              },
+              "message": {
+                "type": "string",
+                "example": "אין לך הרשאה לפעולה הזו"
+              },
+              "details": {
+                "description": "פירוט שדות שגויים (בשגיאת 400)"
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ]
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+          },
+          "name": {
+            "type": "string",
+            "example": "רבקה כהן"
+          },
+          "email": {
+            "type": "string",
+            "example": "rivka@example.com"
+          },
+          "role": {
+            "type": "string",
+            "example": "GRADUATE",
+            "enum": [
+              "ADMIN",
+              "REP",
+              "GRADUATE"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "example": "ACTIVE",
+            "enum": [
+              "PENDING",
+              "ACTIVE",
+              "BLOCKED"
+            ]
+          },
+          "classId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c",
+            "nullable": true
+          },
+          "blessingEmailPref": {
+            "type": "string",
+            "example": "DAILY",
+            "enum": [
+              "EACH",
+              "DAILY",
+              "NONE"
+            ]
+          },
+          "reminderEmails": {
+            "type": "boolean"
+          },
+          "announcementEmails": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "admin@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "Admin1234"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "example": "eyJhbGciOiJIUzI1NiIs..."
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          }
+        }
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "properties": {
+          "joinCode": {
+            "type": "string",
+            "example": "KALLOT-5787"
+          },
+          "classId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+          },
+          "name": {
+            "type": "string",
+            "example": "שרה לוי"
+          },
+          "email": {
+            "type": "string",
+            "example": "sara@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "Sara1234"
+          }
+        },
+        "required": [
+          "joinCode",
+          "classId",
+          "name",
+          "email",
+          "password"
+        ]
+      },
+      "UpdateMe": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "שרה לוי"
+          },
+          "currentPassword": {
+            "type": "string",
+            "example": "Sara1234"
+          },
+          "newPassword": {
+            "type": "string",
+            "example": "NewPass99"
+          },
+          "blessingEmailPref": {
+            "type": "string",
+            "example": "EACH",
+            "enum": [
+              "EACH",
+              "DAILY",
+              "NONE"
+            ]
+          },
+          "reminderEmails": {
+            "type": "boolean"
+          },
+          "announcementEmails": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Class": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+          },
+          "name": {
+            "type": "string",
+            "example": "יב׳1"
+          },
+          "size": {
+            "type": "integer",
+            "example": 32
+          },
+          "order": {
+            "type": "integer",
+            "example": 1
+          },
+          "kallotCount": {
+            "type": "integer",
+            "example": 8
+          },
+          "percent": {
+            "type": "integer",
+            "example": 25
+          },
+          "reps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+                },
+                "name": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ClassInput": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "יב׳6"
+          },
+          "size": {
+            "type": "integer",
+            "example": 30
+          },
+          "order": {
+            "type": "integer",
+            "example": 6
+          }
+        },
+        "required": [
+          "name",
+          "size"
+        ]
+      },
+      "Specialization": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+          },
+          "name": {
+            "type": "string",
+            "example": "הוראה"
+          },
+          "size": {
+            "type": "integer",
+            "example": 60
+          },
+          "order": {
+            "type": "integer",
+            "example": 1
+          }
+        }
+      },
+      "SpecializationInput": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "גרפיקה"
+          },
+          "size": {
+            "type": "integer",
+            "example": 40
+          },
+          "order": {
+            "type": "integer",
+            "example": 2
+          }
+        },
+        "required": [
+          "name",
+          "size"
+        ]
+      },
+      "SpecializationStat": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+          },
+          "name": {
+            "type": "string",
+            "example": "הוראה"
+          },
+          "size": {
+            "type": "integer",
+            "example": 60
+          },
+          "kallotCount": {
+            "type": "integer",
+            "example": 14
+          },
+          "percent": {
+            "type": "integer",
+            "example": 23
+          },
+          "topYeshivot": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/YeshivaStatRow"
+            }
+          }
+        }
+      },
+      "Yeshiva": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+          },
+          "name": {
+            "type": "string",
+            "example": "ישיבה לדוגמה א"
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "isApproved": {
+            "type": "boolean"
+          }
+        }
+      },
+      "YeshivaInput": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "ישיבה לדוגמה ז"
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "YeshivaStatRow": {
+        "type": "object",
+        "properties": {
+          "yeshivaId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+          },
+          "yeshiva": {
+            "type": "string",
+            "example": "ישיבה לדוגמה א"
+          },
+          "count": {
+            "type": "integer",
+            "example": 6
+          },
+          "percent": {
+            "type": "integer",
+            "example": 17
+          }
+        }
+      },
+      "YeshivaStats": {
+        "type": "object",
+        "properties": {
+          "totalKallot": {
+            "type": "integer",
+            "example": 35
+          },
+          "yeshivot": {
+            "type": "array",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/YeshivaStatRow"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kallot": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "className": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "Kalla": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+          },
+          "name": {
+            "type": "string",
+            "example": "מרים וייס"
+          },
+          "classId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+          },
+          "className": {
+            "type": "string",
+            "example": "יב׳1"
+          },
+          "specializationId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+          },
+          "specializationName": {
+            "type": "string",
+            "example": "הוראה"
+          },
+          "yeshivaId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+          },
+          "yeshivaName": {
+            "type": "string",
+            "example": "ישיבה לדוגמה א"
+          },
+          "engagedAt": {
+            "type": "string",
+            "format": "date",
+            "example": "2026-12-24"
+          },
+          "engagedHebrew": {
+            "type": "string",
+            "example": "ב׳ אב תשפ״ו"
+          },
+          "weddingAt": {
+            "type": "string",
+            "format": "date",
+            "example": "2026-12-24",
+            "nullable": true
+          },
+          "weddingHebrew": {
+            "type": "string",
+            "example": "ד׳ טבת תשפ״ז",
+            "nullable": true
+          },
+          "hallName": {
+            "type": "string",
+            "example": "אולמי הדוגמה",
+            "nullable": true
+          },
+          "hallCity": {
+            "type": "string",
+            "example": "בני ברק",
+            "nullable": true
+          },
+          "hideWeddingDate": {
+            "type": "boolean"
+          },
+          "isMine": {
+            "type": "boolean"
+          }
+        }
+      },
+      "KallaInput": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "חנה פרידמן"
+          },
+          "specializationId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+          },
+          "yeshivaId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+          },
+          "engagedAt": {
+            "type": "string",
+            "format": "date",
+            "example": "2026-12-24"
+          },
+          "weddingAt": {
+            "type": "string",
+            "format": "date",
+            "example": "2026-12-24",
+            "nullable": true
+          },
+          "hallName": {
+            "type": "string",
+            "example": "אולמי הדוגמה",
+            "nullable": true
+          },
+          "hallCity": {
+            "type": "string",
+            "example": "ירושלים",
+            "nullable": true
+          },
+          "hideWeddingDate": {
+            "type": "boolean"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c",
+            "nullable": true,
+            "description": "קישור למשתמשת מהכיתה (לא חובה)"
+          }
+        },
+        "required": [
+          "name",
+          "specializationId",
+          "yeshivaId",
+          "engagedAt"
+        ]
+      },
+      "WeddingInput": {
+        "type": "object",
+        "properties": {
+          "weddingAt": {
+            "type": "string",
+            "format": "date",
+            "example": "2026-12-24",
+            "nullable": true
+          },
+          "hallName": {
+            "type": "string",
+            "example": "אולמי הדוגמה",
+            "nullable": true
+          },
+          "hallCity": {
+            "type": "string",
+            "example": "ירושלים",
+            "nullable": true
+          },
+          "hideWeddingDate": {
+            "type": "boolean"
+          }
+        }
+      },
+      "KallaList": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "example": 35
+          },
+          "page": {
+            "type": "integer",
+            "example": 1
+          },
+          "pageSize": {
+            "type": "integer",
+            "example": 50
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Kalla"
+            }
+          }
+        }
+      },
+      "Wedding": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Kalla"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "daysUntil": {
+                "type": "integer",
+                "example": 12
+              }
+            }
+          }
+        ]
+      },
+      "Overview": {
+        "type": "object",
+        "properties": {
+          "yearbook": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "example": "סמינר לדוגמה · מחזור תשפ״ו"
+              },
+              "hebrewYear": {
+                "type": "string",
+                "example": "תשפ״ו"
+              }
+            }
+          },
+          "totals": {
+            "type": "object",
+            "properties": {
+              "kallot": {
+                "type": "integer",
+                "example": 35
+              },
+              "girls": {
+                "type": "integer",
+                "example": 155
+              },
+              "percent": {
+                "type": "integer",
+                "example": 23
+              },
+              "classes": {
+                "type": "integer",
+                "example": 5
+              },
+              "yeshivot": {
+                "type": "integer",
+                "example": 9
+              }
+            }
+          },
+          "classes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "size": {
+                  "type": "integer"
+                },
+                "kallotCount": {
+                  "type": "integer"
+                },
+                "percent": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "specializations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "size": {
+                  "type": "integer"
+                },
+                "kallotCount": {
+                  "type": "integer"
+                },
+                "percent": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "topYeshivot": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/YeshivaStatRow"
+            }
+          },
+          "upcomingWeddings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Wedding"
+            }
+          },
+          "recentEngagements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Kalla"
+            }
+          }
+        }
+      },
+      "Calendar": {
+        "type": "object",
+        "properties": {
+          "month": {
+            "type": "string",
+            "example": "טבת תשפ״ז"
+          },
+          "start": {
+            "type": "string",
+            "format": "date",
+            "example": "2026-12-24"
+          },
+          "end": {
+            "type": "string",
+            "format": "date",
+            "example": "2026-12-24"
+          },
+          "prevMonthDate": {
+            "type": "string",
+            "format": "date",
+            "example": "2026-12-24"
+          },
+          "nextMonthDate": {
+            "type": "string",
+            "format": "date",
+            "example": "2026-12-24"
+          },
+          "days": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "type": "string",
+                  "format": "date",
+                  "example": "2026-12-24"
+                },
+                "hebrewDate": {
+                  "type": "string",
+                  "example": "ד׳ טבת תשפ״ז"
+                },
+                "weekday": {
+                  "type": "integer",
+                  "example": 4
+                },
+                "weddings": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "kallaId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "className": {
+                        "type": "string"
+                      },
+                      "specializationName": {
+                        "type": "string"
+                      },
+                      "yeshivaName": {
+                        "type": "string"
+                      },
+                      "hallName": {
+                        "type": "string"
+                      },
+                      "hallCity": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "ReportInput": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "NEW",
+                "enum": [
+                  "NEW"
+                ]
+              },
+              "data": {
+                "$ref": "#/components/schemas/KallaInput"
+              }
+            },
+            "required": [
+              "type",
+              "data"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "UPDATE",
+                "enum": [
+                  "UPDATE"
+                ]
+              },
+              "data": {
+                "type": "object",
+                "description": "חלק מהשדות של KallaInput"
+              }
+            },
+            "required": [
+              "type",
+              "data"
+            ]
+          }
+        ]
+      },
+      "Report": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+          },
+          "type": {
+            "type": "string",
+            "example": "NEW",
+            "enum": [
+              "NEW",
+              "UPDATE"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "example": "PENDING",
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "DECLINED"
+            ]
+          },
+          "data": {
+            "type": "object"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ReviewInput": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "example": "approve",
+            "enum": [
+              "approve",
+              "decline"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "example": "מזל טוב!"
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "PendingReview": {
+        "type": "object",
+        "properties": {
+          "reports": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "object"
+                },
+                "createdAt": {
+                  "type": "string"
+                },
+                "user": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "className": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "registrations": {
+            "type": "array",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/User"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "className": {
+                      "type": "string"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "RemindersInput": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kallaId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+                },
+                "timing": {
+                  "type": "string",
+                  "example": "BOTH",
+                  "enum": [
+                    "BEFORE",
+                    "DAY",
+                    "BOTH"
+                  ]
+                }
+              },
+              "required": [
+                "kallaId",
+                "timing"
+              ]
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "Reminder": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+          },
+          "timing": {
+            "type": "string",
+            "example": "BOTH",
+            "enum": [
+              "BEFORE",
+              "DAY",
+              "BOTH"
+            ]
+          },
+          "kalla": {
+            "$ref": "#/components/schemas/Kalla"
+          }
+        }
+      },
+      "AlbumSummary": {
+        "type": "object",
+        "properties": {
+          "kallaId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+          },
+          "name": {
+            "type": "string",
+            "example": "מרים וייס"
+          },
+          "className": {
+            "type": "string",
+            "example": "יב׳1"
+          },
+          "blessingsCount": {
+            "type": "integer",
+            "example": 7
+          },
+          "lastBlessingAt": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "Blessing": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+          },
+          "kallaId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+          },
+          "text": {
+            "type": "string",
+            "example": "מזל טוב! שתזכי להקים בית נאמן בישראל"
+          },
+          "color": {
+            "type": "string",
+            "example": "gold",
+            "enum": [
+              "gold",
+              "rose",
+              "sky",
+              "mint",
+              "lilac"
+            ]
+          },
+          "author": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+              },
+              "name": {
+                "type": "string",
+                "example": "שרה לוי"
+              }
+            }
+          },
+          "isHidden": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "editedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "canEdit": {
+            "type": "boolean"
+          }
+        }
+      },
+      "BlessingInput": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "example": "מזל טוב! שתזכי להקים בית נאמן בישראל"
+          },
+          "color": {
+            "type": "string",
+            "example": "rose",
+            "enum": [
+              "gold",
+              "rose",
+              "sky",
+              "mint",
+              "lilac"
+            ]
+          }
+        },
+        "required": [
+          "text"
+        ]
+      },
+      "Album": {
+        "type": "object",
+        "properties": {
+          "kalla": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+              },
+              "name": {
+                "type": "string"
+              },
+              "className": {
+                "type": "string"
+              },
+              "weddingHebrew": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          },
+          "canModerate": {
+            "type": "boolean"
+          },
+          "blessings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Blessing"
+            }
+          }
+        }
+      },
+      "Article": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+          },
+          "title": {
+            "type": "string",
+            "example": "החודש שלפני החתונה"
+          },
+          "slug": {
+            "type": "string",
+            "example": "month-before-wedding"
+          },
+          "topic": {
+            "type": "string",
+            "example": "PREPARATIONS",
+            "enum": [
+              "PREPARATIONS",
+              "HOME",
+              "FINANCE",
+              "RECIPES",
+              "NEWS"
+            ]
+          },
+          "body": {
+            "type": "string",
+            "example": "רשימת הכנות..."
+          },
+          "isPublished": {
+            "type": "boolean"
+          },
+          "publishedAt": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "ArticleInput": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "תקציב לזוג צעיר"
+          },
+          "slug": {
+            "type": "string",
+            "example": "young-couple-budget"
+          },
+          "topic": {
+            "type": "string",
+            "example": "FINANCE",
+            "enum": [
+              "PREPARATIONS",
+              "HOME",
+              "FINANCE",
+              "RECIPES",
+              "NEWS"
+            ]
+          },
+          "body": {
+            "type": "string",
+            "example": "לרשום את כל ההוצאות בחודש הראשון..."
+          },
+          "isPublished": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "title",
+          "slug",
+          "topic",
+          "body"
+        ]
+      },
+      "Newsletter": {
+        "type": "object",
+        "properties": {
+          "topics": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "example": "HOME",
+              "enum": [
+                "PREPARATIONS",
+                "HOME",
+                "FINANCE",
+                "RECIPES",
+                "NEWS"
+              ]
+            }
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "topics"
+        ]
+      },
+      "AnnouncementInput": {
+        "type": "object",
+        "properties": {
+          "classId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c",
+            "description": "בלי classId: לכל השנתון (מנהלת בלבד)"
+          },
+          "subject": {
+            "type": "string",
+            "example": "מפגש מחזור"
+          },
+          "body": {
+            "type": "string",
+            "example": "נפגשות ביום שלישי בשעה 20:00"
+          }
+        },
+        "required": [
+          "subject",
+          "body"
+        ]
+      },
+      "Announcement": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "classId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c",
+            "nullable": true
+          },
+          "recipientsCount": {
+            "type": "integer",
+            "example": 31
+          },
+          "sentAt": {
+            "type": "string"
+          }
+        }
+      },
+      "UserAdminUpdate": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "BLOCKED",
+            "enum": [
+              "ACTIVE",
+              "BLOCKED"
+            ]
+          },
+          "classId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "tags": [
+          "כללי"
+        ],
+        "summary": "בדיקת בריאות השרת ומסד הנתונים",
+        "description": "**הרשאה:** פתוח, בלי התחברות.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "example": {
+                  "status": "ok",
+                  "database": "ok",
+                  "time": "2026-10-18T12:00:00.000Z"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "התחברות"
+        ],
+        "summary": "כניסה. מחזיר JWT להעתקה לכפתור Authorize",
+        "description": "**הרשאה:** פתוח, בלי התחברות.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              },
+              "example": {
+                "email": "admin@example.com",
+                "password": "Admin1234"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "שדות חסרים או לא תקינים (VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "יותר מדי בקשות (TOO_MANY_REQUESTS)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "tags": [
+          "התחברות"
+        ],
+        "summary": "הרשמה עם קוד מחזור. החשבון פעיל מיד, ומחזיר token (מחוברת מיד)",
+        "description": "**הרשאה:** פתוח, בלי התחברות.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "נרשמת בהצלחה! ברוכה הבאה לשנתון"
+                    },
+                    "token": {
+                      "type": "string",
+                      "example": "eyJhbGciOiJIUzI1NiIs..."
+                    },
+                    "user": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "שדות חסרים או לא תקינים (VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "התנגשות: כפילות, חריגה ממספר הבנות, או שכבר טופל (CONFLICT)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "יותר מדי בקשות (TOO_MANY_REQUESTS)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/classes": {
+      "get": {
+        "tags": [
+          "התחברות"
+        ],
+        "summary": "רשימת הכיתות לטופס ההרשמה, לפי קוד מחזור",
+        "description": "**הרשאה:** פתוח, בלי התחברות.",
+        "security": [],
+        "parameters": [
+          {
+            "name": "joinCode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "KALLOT-5787"
+            },
+            "description": "קוד המחזור"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "yearbook": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "hebrewYear": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "classes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+                          },
+                          "name": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "שדות חסרים או לא תקינים (VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "לא נמצא (NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "tags": [
+          "התחברות"
+        ],
+        "summary": "הפרטים של המשתמשת המחוברת",
+        "description": "**הרשאה:** כל משתמשת מחוברת ופעילה (Bearer Token).",
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/User"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "className": {
+                          "type": "string"
+                        },
+                        "kallaId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c",
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "התחברות"
+        ],
+        "summary": "עדכון שם, סיסמה והעדפות מייל (כולל תדירות מייל על ברכות)",
+        "description": "**הרשאה:** כל משתמשת מחוברת ופעילה (Bearer Token).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMe"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "שדות חסרים או לא תקינים (VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/forgot": {
+      "post": {
+        "tags": [
+          "התחברות"
+        ],
+        "summary": "שליחת מייל לאיפוס סיסמה",
+        "description": "**הרשאה:** פתוח, בלי התחברות.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "example": "sara@example.com"
+                  }
+                },
+                "required": [
+                  "email"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "שדות חסרים או לא תקינים (VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "יותר מדי בקשות (TOO_MANY_REQUESTS)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/reset": {
+      "post": {
+        "tags": [
+          "התחברות"
+        ],
+        "summary": "קביעת סיסמה חדשה עם הקוד מהמייל",
+        "description": "**הרשאה:** פתוח, בלי התחברות.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string"
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "example": "NewPass99"
+                  }
+                },
+                "required": [
+                  "token",
+                  "newPassword"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "שדות חסרים או לא תקינים (VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "לא נמצא (NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "יותר מדי בקשות (TOO_MANY_REQUESTS)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/overview": {
+      "get": {
+        "tags": [
+          "סטטיסטיקה"
+        ],
+        "summary": "מסך הסקירה: אחוזים, ישיבות מובילות, חתונות קרובות ואחרונות",
+        "description": "**הרשאה:** כל משתמשת מחוברת ופעילה (Bearer Token).",
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Overview"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/weddings": {
+      "get": {
+        "tags": [
+          "סטטיסטיקה"
+        ],
+        "summary": "חתונות קרובות",
+        "description": "**הרשאה:** כל משתמשת מחוברת ופעילה (Bearer Token).",
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 60
+            },
+            "description": "כמה ימים קדימה (1-365)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Wedding"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "שדות חסרים או לא תקינים (VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/calendar": {
+      "get": {
+        "tags": [
+          "סטטיסטיקה"
+        ],
+        "summary": "לוח שנה: כל ימי החודש העברי עם החתונות והאולמות",
+        "description": "**הרשאה:** כל משתמשת מחוברת ופעילה (Bearer Token).",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "תאריך כלשהו בחודש הרצוי. ברירת מחדל: היום"
+          },
+          {
+            "name": "classId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            },
+            "description": "סינון לפי כיתה"
+          },
+          {
+            "name": "specializationId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            },
+            "description": "סינון לפי התמחות"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Calendar"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "שדות חסרים או לא תקינים (VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/classes": {
+      "get": {
+        "tags": [
+          "כיתות"
+        ],
+        "summary": "כל הכיתות עם מספר כלות ואחוז",
+        "description": "**הרשאה:** כל משתמשת מחוברת ופעילה (Bearer Token).",
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Class"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "כיתות"
+        ],
+        "summary": "הוספת כיתה",
+        "description": "**הרשאה:** מנהלת בלבד (ADMIN).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClassInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Class"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "שדות חסרים או לא תקינים (VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "התנגשות: כפילות, חריגה ממספר הבנות, או שכבר טופל (CONFLICT)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/classes/{id}": {
+      "patch": {
+        "tags": [
+          "כיתות"
+        ],
+        "summary": "עדכון כיתה",
+        "description": "נציגה יכולה לעדכן רק את size של הכיתה שלה. size לא יכול להיות קטן ממספר הכלות.\n\n**הרשאה:** מנהלת, או נציגה לכיתה שלה בלבד (ADMIN / REP).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "יב׳1"
+                  },
+                  "size": {
+                    "type": "integer",
+                    "example": 33
+                  },
+                  "order": {
+                    "type": "integer",
+                    "example": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Class"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "שדות חסרים או לא תקינים (VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "לא נמצא (NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "התנגשות: כפילות, חריגה ממספר הבנות, או שכבר טופל (CONFLICT)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "כיתות"
+        ],
+        "summary": "מחיקת כיתה (רק אם אין בה כלות)",
+        "description": "**הרשאה:** מנהלת בלבד (ADMIN).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "בוצע בהצלחה, בלי תוכן"
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "לא נמצא (NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "התנגשות: כפילות, חריגה ממספר הבנות, או שכבר טופל (CONFLICT)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/classes/{classId}/kallot": {
+      "get": {
+        "tags": [
+          "כלות"
+        ],
+        "summary": "הכלות בכיתה",
+        "description": "**הרשאה:** כל משתמשת מחוברת ופעילה (Bearer Token).",
+        "parameters": [
+          {
+            "name": "classId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "class": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "size": {
+                          "type": "integer"
+                        },
+                        "kallotCount": {
+                          "type": "integer"
+                        },
+                        "percent": {
+                          "type": "integer"
+                        }
+                      }
+                    },
+                    "kallot": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Kalla"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "לא נמצא (NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "כלות"
+        ],
+        "summary": "הוספת כלה לכיתה",
+        "description": "בודק: אירוסין לא בעתיד, חתונה אחרי האירוסין, שם לא כפול בכיתה, ויש מקום בכיתה ובהתמחות.\n\n**הרשאה:** מנהלת, או נציגה לכיתה שלה בלבד (ADMIN / REP).",
+        "parameters": [
+          {
+            "name": "classId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KallaInput"
+              },
+              "example": {
+                "name": "חנה פרידמן",
+                "specializationId": "9a1b2c3d-3333-4a2b-8c3d-000000000001",
+                "yeshivaId": "9a1b2c3d-4444-4a2b-8c3d-000000000001",
+                "engagedAt": "2026-10-15",
+                "weddingAt": "2027-01-12",
+                "hallName": "אולמי הדוגמה",
+                "hallCity": "ירושלים"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Kalla"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "classPercent": {
+                          "type": "integer",
+                          "example": 28
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "שדות חסרים או לא תקינים (VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "לא נמצא (NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "התנגשות: כפילות, חריגה ממספר הבנות, או שכבר טופל (CONFLICT)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/kallot": {
+      "get": {
+        "tags": [
+          "כלות"
+        ],
+        "summary": "רשימת כלות עם חיפוש, סינון, מיון ועמודים",
+        "description": "**הרשאה:** כל משתמשת מחוברת ופעילה (Bearer Token).",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "חיפוש בשם"
+          },
+          {
+            "name": "classId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            },
+            "description": "סינון לפי כיתה"
+          },
+          {
+            "name": "specializationId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            },
+            "description": "סינון לפי התמחות"
+          },
+          {
+            "name": "yeshivaId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            },
+            "description": "סינון לפי ישיבה"
+          },
+          {
+            "name": "hasWedding",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "description": "רק עם תאריך חתונה / רק בלי"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "name",
+                "engagedAt",
+                "weddingAt",
+                "className"
+              ],
+              "default": "engagedAt"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "default": "desc"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 50
+            },
+            "description": "עד 200"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KallaList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "שדות חסרים או לא תקינים (VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/kallot/{id}": {
+      "get": {
+        "tags": [
+          "כלות"
+        ],
+        "summary": "כלה אחת",
+        "description": "**הרשאה:** כל משתמשת מחוברת ופעילה (Bearer Token).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Kalla"
+                },
+                "example": {
+                  "id": "9a1b2c3d-1111-4a2b-8c3d-000000000001",
+                  "name": "מרים וייס",
+                  "classId": "9a1b2c3d-2222-4a2b-8c3d-000000000001",
+                  "className": "יב׳1",
+                  "specializationId": "9a1b2c3d-3333-4a2b-8c3d-000000000001",
+                  "specializationName": "הוראה",
+                  "yeshivaId": "9a1b2c3d-4444-4a2b-8c3d-000000000001",
+                  "yeshivaName": "ישיבה לדוגמה א",
+                  "engagedAt": "2026-07-27",
+                  "engagedHebrew": "ב׳ אב תשפ״ו",
+                  "weddingAt": "2026-12-13",
+                  "weddingHebrew": "כ״ג כסלו תשפ״ז",
+                  "hallName": "אולמי הדוגמה",
+                  "hallCity": "בני ברק",
+                  "hideWeddingDate": false,
+                  "isMine": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "לא נמצא (NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "כלות"
+        ],
+        "summary": "עדכון פרטי כלה",
+        "description": "נציגה: רק בכיתה שלה. העברה לכיתה אחרת (classId): מנהלת בלבד. שינוי תאריך החתונה מאפס את התזכורות.\n\n**הרשאה:** מנהלת, או נציגה לכיתה שלה בלבד (ADMIN / REP).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/KallaInput"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "classId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+                      }
+                    }
+                  }
+                ],
+                "description": "כל השדות לא חובה"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Kalla"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "שדות חסרים או לא תקינים (VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "לא נמצא (NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "התנגשות: כפילות, חריגה ממספר הבנות, או שכבר טופל (CONFLICT)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "כלות"
+        ],
+        "summary": "מחיקת כלה (גם האלבום והתזכורות שלה נמחקים)",
+        "description": "**הרשאה:** מנהלת, או נציגה לכיתה שלה בלבד (ADMIN / REP).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "בוצע בהצלחה, בלי תוכן"
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "לא נמצא (NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/kallot/{id}/wedding": {
+      "patch": {
+        "tags": [
+          "כלות"
+        ],
+        "summary": "עדכון תאריך חתונה, אולם, עיר והסתרת התאריך",
+        "description": "מותר למנהלת, לנציגת הכיתה, ולכלה עצמה.\n\n**הרשאה:** ראו פירוט בתיאור.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeddingInput"
+              },
+              "example": {
+                "weddingAt": "2027-01-12",
+                "hallName": "אולמי הדוגמה",
+                "hallCity": "ירושלים"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Kalla"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "שדות חסרים או לא תקינים (VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "לא נמצא (NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/specializations": {
+      "get": {
+        "tags": [
+          "התמחויות"
+        ],
+        "summary": "רשימת ההתמחויות",
+        "description": "**הרשאה:** כל משתמשת מחוברת ופעילה (Bearer Token).",
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Specialization"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "התמחויות"
+        ],
+        "summary": "הוספת התמחות",
+        "description": "**הרשאה:** מנהלת בלבד (ADMIN).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpecializationInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Specialization"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "שדות חסרים או לא תקינים (VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "התנגשות: כפילות, חריגה ממספר הבנות, או שכבר טופל (CONFLICT)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/specializations/stats": {
+      "get": {
+        "tags": [
+          "התמחויות"
+        ],
+        "summary": "אחוז מאורסות בכל התמחות, וישיבות מובילות בכל אחת",
+        "description": "**הרשאה:** כל משתמשת מחוברת ופעילה (Bearer Token).",
+        "parameters": [
+          {
+            "name": "classId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            },
+            "description": "רק כלות מכיתה מסוימת"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SpecializationStat"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/specializations/{id}": {
+      "patch": {
+        "tags": [
+          "התמחויות"
+        ],
+        "summary": "עדכון התמחות",
+        "description": "**הרשאה:** מנהלת בלבד (ADMIN).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpecializationInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Specialization"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "שדות חסרים או לא תקינים (VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "לא נמצא (NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "התנגשות: כפילות, חריגה ממספר הבנות, או שכבר טופל (CONFLICT)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "התמחויות"
+        ],
+        "summary": "מחיקת התמחות (רק אם אין בה כלות)",
+        "description": "**הרשאה:** מנהלת בלבד (ADMIN).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "בוצע בהצלחה, בלי תוכן"
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "לא נמצא (NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "התנגשות: כפילות, חריגה ממספר הבנות, או שכבר טופל (CONFLICT)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/specializations/{id}/kallot": {
+      "get": {
+        "tags": [
+          "התמחויות"
+        ],
+        "summary": "הכלות בהתמחות, מכל הכיתות",
+        "description": "**הרשאה:** כל משתמשת מחוברת ופעילה (Bearer Token).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "specialization": {
+                      "$ref": "#/components/schemas/Specialization"
+                    },
+                    "kallot": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Kalla"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "לא נמצא (NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/yeshivot": {
+      "get": {
+        "tags": [
+          "ישיבות"
+        ],
+        "summary": "חיפוש ישיבה (להשלמה אוטומטית)",
+        "description": "**הרשאה:** כל משתמשת מחוברת ופעילה (Bearer Token).",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "חלק מהשם. מחפש גם בשמות הנוספים"
+          },
+          {
+            "name": "includePending",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "description": "מנהלת: כולל הצעות שממתינות לאישור"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Yeshiva"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "ישיבות"
+        ],
+        "summary": "הוספת ישיבה. מנהלת: מאושרת מיד. נציגה: הצעה שממתינה לאישור",
+        "description": "**הרשאה:** מנהלת, או נציגה לכיתה שלה בלבד (ADMIN / REP).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/YeshivaInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Yeshiva"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "שדות חסרים או לא תקינים (VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "התנגשות: כפילות, חריגה ממספר הבנות, או שכבר טופל (CONFLICT)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/yeshivot/{id}": {
+      "patch": {
+        "tags": [
+          "ישיבות"
+        ],
+        "summary": "עריכה ואישור ישיבה",
+        "description": "**הרשאה:** מנהלת בלבד (ADMIN).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "aliases": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "isApproved": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Yeshiva"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "שדות חסרים או לא תקינים (VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "לא נמצא (NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "התנגשות: כפילות, חריגה ממספר הבנות, או שכבר טופל (CONFLICT)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/yeshivot/merge": {
+      "post": {
+        "tags": [
+          "ישיבות"
+        ],
+        "summary": "איחוד ישיבות כפולות",
+        "description": "כל הכלות עוברות לישיבה הראשית, והשמות הישנים נשמרים כשמות נוספים.\n\n**הרשאה:** מנהלת בלבד (ADMIN).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "targetId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+                  },
+                  "sourceIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+                    }
+                  }
+                },
+                "required": [
+                  "targetId",
+                  "sourceIds"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "yeshiva": {
+                      "$ref": "#/components/schemas/Yeshiva"
+                    },
+                    "movedKallot": {
+                      "type": "integer",
+                      "example": 3
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "שדות חסרים או לא תקינים (VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "לא נמצא (NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/yeshivot/stats": {
+      "get": {
+        "tags": [
+          "ישיבות"
+        ],
+        "summary": "כמה כלות מכל ישיבה: בשנתון, בכיתה או בהתמחות",
+        "description": "**הרשאה:** כל משתמשת מחוברת ופעילה (Bearer Token).",
+        "parameters": [
+          {
+            "name": "classId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            },
+            "description": "סינון לפי כיתה"
+          },
+          {
+            "name": "specializationId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            },
+            "description": "סינון לפי התמחות"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/YeshivaStats"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/me/report": {
+      "get": {
+        "tags": [
+          "דיווחים"
+        ],
+        "summary": "הדיווחים שלי",
+        "description": "**הרשאה:** כל משתמשת מחוברת ופעילה (Bearer Token).",
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Report"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "דיווחים"
+        ],
+        "summary": "דיווח ״התארסתי״ (NEW) או עדכון הפרטים שלי (UPDATE)",
+        "description": "**הרשאה:** כל משתמשת מחוברת ופעילה (Bearer Token).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportInput"
+              },
+              "example": {
+                "type": "NEW",
+                "data": {
+                  "name": "שרה לוי",
+                  "specializationId": "9a1b2c3d-3333-4a2b-8c3d-000000000001",
+                  "yeshivaId": "9a1b2c3d-4444-4a2b-8c3d-000000000001",
+                  "engagedAt": "2026-10-14"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Report"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "שדות חסרים או לא תקינים (VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "התנגשות: כפילות, חריגה ממספר הבנות, או שכבר טופל (CONFLICT)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/requests": {
+      "get": {
+        "tags": [
+          "ניהול"
+        ],
+        "summary": "דיווחים והרשמות שמחכים לאישור",
+        "description": "**הרשאה:** מנהלת, או נציגה לכיתה שלה בלבד (ADMIN / REP).",
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PendingReview"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/requests/{id}": {
+      "patch": {
+        "tags": [
+          "ניהול"
+        ],
+        "summary": "אישור או דחייה של דיווח",
+        "description": "אם שתי נציגות מאשרות יחד, השנייה מקבלת 409 עם שם מי שטיפלה.\n\n**הרשאה:** מנהלת, או נציגה לכיתה שלה בלבד (ADMIN / REP).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "APPROVED"
+                    },
+                    "kalla": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "שדות חסרים או לא תקינים (VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "לא נמצא (NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "התנגשות: כפילות, חריגה ממספר הבנות, או שכבר טופל (CONFLICT)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/registrations/{userId}": {
+      "patch": {
+        "tags": [
+          "ניהול"
+        ],
+        "summary": "אישור או דחייה של הרשמה (דחייה מוחקת את החשבון הממתין)",
+        "description": "**הרשאה:** מנהלת, או נציגה לכיתה שלה בלבד (ADMIN / REP).",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ACTIVE"
+                    },
+                    "user": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "שדות חסרים או לא תקינים (VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "לא נמצא (NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "התנגשות: כפילות, חריגה ממספר הבנות, או שכבר טופל (CONFLICT)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/me/reminders": {
+      "get": {
+        "tags": [
+          "תזכורות"
+        ],
+        "summary": "התזכורות שלי",
+        "description": "**הרשאה:** כל משתמשת מחוברת ופעילה (Bearer Token).",
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Reminder"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "תזכורות"
+        ],
+        "summary": "שמירת רשימת התזכורות (מחליף את כולה)",
+        "description": "**הרשאה:** כל משתמשת מחוברת ופעילה (Bearer Token).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemindersInput"
+              },
+              "example": {
+                "items": [
+                  {
+                    "kallaId": "9a1b2c3d-1111-4a2b-8c3d-000000000001",
+                    "timing": "BOTH"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Reminder"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "שדות חסרים או לא תקינים (VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/albums": {
+      "get": {
+        "tags": [
+          "אלבום איחולים"
+        ],
+        "summary": "כל האלבומים עם מספר הברכות",
+        "description": "**הרשאה:** כל משתמשת מחוברת ופעילה (Bearer Token).",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "חיפוש בשם הכלה"
+          },
+          {
+            "name": "classId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            },
+            "description": "סינון לפי כיתה"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AlbumSummary"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/albums/{kallaId}": {
+      "get": {
+        "tags": [
+          "אלבום איחולים"
+        ],
+        "summary": "האלבום של כלה",
+        "description": "**הרשאה:** כל משתמשת מחוברת ופעילה (Bearer Token).",
+        "parameters": [
+          {
+            "name": "kallaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            }
+          },
+          {
+            "name": "includeHidden",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "description": "הכלה, הנציגה והמנהלת: כולל ברכות מוסתרות"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Album"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "לא נמצא (NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/albums/{kallaId}/blessings": {
+      "post": {
+        "tags": [
+          "אלבום איחולים"
+        ],
+        "summary": "כתיבת ברכה. כלה שבחרה EACH מקבלת מייל מיד",
+        "description": "**הרשאה:** כל משתמשת מחוברת ופעילה (Bearer Token).",
+        "parameters": [
+          {
+            "name": "kallaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BlessingInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Blessing"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "שדות חסרים או לא תקינים (VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "לא נמצא (NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/blessings/{id}": {
+      "patch": {
+        "tags": [
+          "אלבום איחולים"
+        ],
+        "summary": "עריכת ברכה",
+        "description": "הכותבת: רק ב־24 השעות הראשונות. מנהלת: תמיד.\n\n**הרשאה:** ראו פירוט בתיאור.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BlessingInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Blessing"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "שדות חסרים או לא תקינים (VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "לא נמצא (NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "אלבום איחולים"
+        ],
+        "summary": "מחיקת ברכה (אותם כללים כמו עריכה)",
+        "description": "**הרשאה:** ראו פירוט בתיאור.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "בוצע בהצלחה, בלי תוכן"
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "לא נמצא (NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/blessings/{id}/hide": {
+      "patch": {
+        "tags": [
+          "אלבום איחולים"
+        ],
+        "summary": "הסתרה או החזרה של ברכה",
+        "description": "מותר לכלה עצמה, לנציגת הכיתה ולמנהלת.\n\n**הרשאה:** ראו פירוט בתיאור.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "hidden": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "hidden"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Blessing"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "שדות חסרים או לא תקינים (VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "לא נמצא (NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/articles": {
+      "get": {
+        "tags": [
+          "מידע ודיוור"
+        ],
+        "summary": "דפי מידע (מנהלת רואה גם טיוטות)",
+        "description": "**הרשאה:** כל משתמשת מחוברת ופעילה (Bearer Token).",
+        "parameters": [
+          {
+            "name": "topic",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PREPARATIONS",
+                "HOME",
+                "FINANCE",
+                "RECIPES",
+                "NEWS"
+              ]
+            },
+            "description": "סינון לפי נושא"
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "חיפוש בכותרת"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Article"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "מידע ודיוור"
+        ],
+        "summary": "כתיבת דף מידע",
+        "description": "**הרשאה:** מנהלת בלבד (ADMIN).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArticleInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Article"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "שדות חסרים או לא תקינים (VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "התנגשות: כפילות, חריגה ממספר הבנות, או שכבר טופל (CONFLICT)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/articles/{slug}": {
+      "get": {
+        "tags": [
+          "מידע ודיוור"
+        ],
+        "summary": "דף מידע לפי כתובת",
+        "description": "**הרשאה:** כל משתמשת מחוברת ופעילה (Bearer Token).",
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Article"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "לא נמצא (NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "month-before-wedding"
+            }
+          }
+        ]
+      }
+    },
+    "/api/articles/{id}": {
+      "patch": {
+        "tags": [
+          "מידע ודיוור"
+        ],
+        "summary": "עריכת דף מידע",
+        "description": "**הרשאה:** מנהלת בלבד (ADMIN).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArticleInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Article"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "שדות חסרים או לא תקינים (VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "לא נמצא (NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "התנגשות: כפילות, חריגה ממספר הבנות, או שכבר טופל (CONFLICT)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "מידע ודיוור"
+        ],
+        "summary": "מחיקת דף מידע",
+        "description": "**הרשאה:** מנהלת בלבד (ADMIN).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "בוצע בהצלחה, בלי תוכן"
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "לא נמצא (NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/me/newsletter": {
+      "get": {
+        "tags": [
+          "מידע ודיוור"
+        ],
+        "summary": "נושאי הדיוור שלי",
+        "description": "**הרשאה:** כל משתמשת מחוברת ופעילה (Bearer Token).",
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Newsletter"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "מידע ודיוור"
+        ],
+        "summary": "בחירת נושאי דיוור",
+        "description": "**הרשאה:** כל משתמשת מחוברת ופעילה (Bearer Token).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Newsletter"
+              },
+              "example": {
+                "topics": [
+                  "PREPARATIONS",
+                  "HOME"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Newsletter"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "שדות חסרים או לא תקינים (VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/unsubscribe/{token}": {
+      "get": {
+        "tags": [
+          "מידע ודיוור"
+        ],
+        "summary": "הסרה מהדיוור מתוך קישור במייל",
+        "description": "**הרשאה:** פתוח, בלי התחברות.",
+        "security": [],
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "לא נמצא (NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/users": {
+      "get": {
+        "tags": [
+          "ניהול"
+        ],
+        "summary": "רשימת משתמשות עם חיפוש וסינון",
+        "description": "**הרשאה:** מנהלת בלבד (ADMIN).",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "חיפוש בשם או במייל"
+          },
+          {
+            "name": "classId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            },
+            "description": "סינון לפי כיתה"
+          },
+          {
+            "name": "role",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ADMIN",
+                "REP",
+                "GRADUATE"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "ACTIVE",
+                "BLOCKED"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/users/{id}": {
+      "patch": {
+        "tags": [
+          "ניהול"
+        ],
+        "summary": "חסימה, החזרה או העברת כיתה",
+        "description": "**הרשאה:** מנהלת בלבד (ADMIN).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserAdminUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "שדות חסרים או לא תקינים (VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "לא נמצא (NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/classes/{id}/reps": {
+      "get": {
+        "tags": [
+          "ניהול"
+        ],
+        "summary": "הנציגות של כיתה",
+        "description": "**הרשאה:** מנהלת בלבד (ADMIN).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "לא נמצא (NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "ניהול"
+        ],
+        "summary": "מינוי נציגה נוספת (אפשר כמה לכל כיתה)",
+        "description": "**הרשאה:** מנהלת בלבד (ADMIN).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+                  }
+                },
+                "required": [
+                  "userId"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "שדות חסרים או לא תקינים (VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "לא נמצא (NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "התנגשות: כפילות, חריגה ממספר הבנות, או שכבר טופל (CONFLICT)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/classes/{id}/reps/{userId}": {
+      "delete": {
+        "tags": [
+          "ניהול"
+        ],
+        "summary": "הסרת נציגה (חוזרת להיות בוגרת)",
+        "description": "**הרשאה:** מנהלת בלבד (ADMIN).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "בוצע בהצלחה, בלי תוכן"
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "לא נמצא (NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/announcements": {
+      "get": {
+        "tags": [
+          "ניהול"
+        ],
+        "summary": "הודעות שנשלחו",
+        "description": "**הרשאה:** מנהלת, או נציגה לכיתה שלה בלבד (ADMIN / REP).",
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Announcement"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "ניהול"
+        ],
+        "summary": "שליחת הודעה במייל לשנתון או לכיתה",
+        "description": "**הרשאה:** מנהלת, או נציגה לכיתה שלה בלבד (ADMIN / REP).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnnouncementInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Announcement"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "שדות חסרים או לא תקינים (VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "לא נמצא (NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/export": {
+      "get": {
+        "tags": [
+          "ניהול"
+        ],
+        "summary": "ייצוא כלות לקובץ CSV (נפתח באקסל)",
+        "description": "**הרשאה:** מנהלת, או נציגה לכיתה שלה בלבד (ADMIN / REP).",
+        "parameters": [
+          {
+            "name": "classId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f1c2a8e-6b2d-4c1e-9a7b-2d4e5f6a7b8c"
+            },
+            "description": "בלי: כל השנתון (מנהלת). נציגה מקבלת תמיד את הכיתה שלה"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "קובץ CSV",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/jobs/{name}/run": {
+      "post": {
+        "tags": [
+          "ניהול"
+        ],
+        "summary": "הרצה ידנית של משימה מתוזמנת (לבדיקה)",
+        "description": "**הרשאה:** מנהלת בלבד (ADMIN).",
+        "responses": {
+          "200": {
+            "description": "הצלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "job": {
+                      "type": "string"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "sent": {
+                          "type": "integer",
+                          "example": 0
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "חסר Token, או שהוא לא תקין או פג (UNAUTHORIZED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה, או שהחשבון ממתין לאישור או חסום (FORBIDDEN / PENDING / BLOCKED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "remindersBefore",
+                "remindersDay",
+                "blessingsDigest",
+                "weeklyNewsletter",
+                "adminSummary",
+                "cleanup"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}
